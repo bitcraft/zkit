@@ -1,4 +1,0 @@
-title=gametitle
-author=the_pygame_gurus
-api=1
-orientation=landscape

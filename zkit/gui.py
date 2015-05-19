@@ -1,69 +1,76 @@
 from itertools import product
-
 from pygame import Rect, RLEACCEL
 import pygame
 
-
-__all__ = ['GraphicBox',
-           'draw_text',
-           'render_outline_text']
+__all__ = ('GraphicBox', 'draw_text')
 
 
 class GraphicBox(object):
-    """
-    Generic class for drawing graphical boxes
+    """Generic class for drawing graphical boxes
 
-    load it, then draw it wherever needed
-    """
+    box = GraphicBox('border.png')
+    box.draw(rect)
 
-    def __init__(self, filename, hollow=False):
+    The border graphic must contain 9 tiles laid out in a box.
+    Each tile must be the same size
+    """
+    def __init__(self, image, hollow=False):
+        iw, ih = image.get_size()
+        self.tw = int(iw / 3)
+        self.th = int(ih / 3)
         self.hollow = hollow
 
-        image = pygame.image.load(filename)
-        iw, self.th = image.get_size()
-        self.tw = iw / 9
-        tiles = [image.subsurface((i * self.tw, 0, self.tw, self.th))
-                 for i in range(9)]
+        tiles = [image.subsurface((x, y, self.tw, self.th))
+                 for x, y in product(range(0, iw, self.tw),
+                                     range(0, ih, self.th))]
 
-        if self.hollow:
-            ck = tiles[8].get_at((0, 0))
-            [t.set_colorkey(ck, RLEACCEL) for t in tiles]
-
-        names = "nw ne sw se n e s w c".split()
-        self.tiles = dict(zip(names, tiles))
+        self.tiles = dict(zip("nw w sw n c s ne e se".split(), tiles))
         self.background = self.tiles['c'].get_at((0, 0))
 
-    def draw(self, surface, rect):
+        if self.hollow:
+            ck = self.tiles['c'].get_at((0, 0))
+            [t.set_colorkey(ck, RLEACCEL) for t in self.tiles.values()]
+
+    def draw(self, surface, rect=None):
+        if rect is None:
+            rect = surface.get_rect()
+
         ox, oy, w, h = Rect(rect)
+        surface_blit = surface.blit
+        tiles = self.tiles
+        tw = self.tw
+        th = self.th
 
         if not self.hollow:
-            p = product(
-                range(int(self.tw + ox), int(w - self.tw + ox), int(self.tw)),
-                range(int(self.th + oy), int(h - self.th + oy), int(self.th)))
+            p = product(range(tw + ox, w - tw + ox, tw),
+                        range(th + oy, h - th + oy, th))
+            [surface_blit(tiles['c'], (x, y)) for x, y in p]
 
-            [surface.blit(self.tiles['c'], (x, y)) for x, y in p]
+        for x in range(tw + ox, w - tw + ox, tw):
+            surface_blit(tiles['n'], (x, oy))
+            surface_blit(tiles['s'], (x, h - th + oy))
 
-        for x in range(int(self.tw + ox), int(w - self.tw + ox), int(self.tw)):
-            surface.blit(self.tiles['n'], (x, oy))
-            surface.blit(self.tiles['s'], (x, h - self.th + oy))
+        for y in range(th + oy, h - th + oy, th):
+            surface_blit(tiles['e'], (w - tw + ox, y))
+            surface_blit(tiles['w'], (ox, y))
 
-        for y in range(self.th + oy, h - self.th + oy, self.th):
-            surface.blit(self.tiles['w'], (w - self.tw + ox, y))
-            surface.blit(self.tiles['e'], (ox, y))
-
-        surface.blit(self.tiles['nw'], (ox, oy))
-        surface.blit(self.tiles['ne'], (w - self.tw + ox, oy))
-        surface.blit(self.tiles['se'], (ox, h - self.th + oy))
-        surface.blit(self.tiles['sw'], (w - self.tw + ox, h - self.th + oy))
+        surface_blit(tiles['nw'], (ox, oy))
+        surface_blit(tiles['ne'], (w - tw + ox, oy))
+        surface_blit(tiles['sw'], (ox, h - th + oy))
+        surface_blit(tiles['se'], (w - tw + ox, h - th + oy))
 
 
-def draw_text(surface, text, color, rect, font=None, aa=False, bkg=None):
+def draw_text(surface, text, rect, font=None, fg_color=None, bg_color=None, aa=False):
     """ draw some text into an area of a surface
 
     automatically wraps words
-    returns any text that didn't get blitted
+    returns size and any text that didn't get blit
     passing None as the surface is ok
     """
+    if fg_color is None:
+        fg_color = (0, 0, 0)
+
+    total_width = 0
     rect = Rect(rect)
     y = rect.top
     line_spacing = -2
@@ -78,57 +85,43 @@ def draw_text(surface, text, color, rect, font=None, aa=False, bkg=None):
     # for very small fonts, turn off antialiasing
     if font_height < 16:
         aa = 0
-        bkg = None
+        bg_color = None
 
     while text:
-        i = 1
+        char_index = 1
 
         # determine if the row of text will be outside our area
         if y + font_height > rect.bottom:
             break
 
         # determine maximum width of line
-        while font.size(text[:i])[0] < rect.width and i < len(text):
-            if text[i] == "\n":
-                text = text[:i] + text[i + 1:]
+        line_width = font.size(text[:char_index])[0]
+        while line_width < rect.width and char_index < len(text):
+            if text[char_index] == "\n":
+                text = text[:char_index] + text[char_index + 1:]
                 break
-            i += 1
+
+            char_index += 1
+            line_width = font.size(text[:char_index])[0]
+            total_width = max(total_width, line_width)
         else:
             # if we've wrapped the text, then adjust the wrap to the last word
-            if i < len(text):
-                i = text.rfind(" ", 0, i) + 1
+            if char_index < len(text):
+                char_index = text.rfind(" ", 0, char_index) + 1
 
         if surface:
             # render the line and blit it to the surface
-            if bkg:
-                image = font.render(text[:i], 1, color, bkg)
-                image.set_colorkey(bkg)
+            if bg_color:
+                image = font.render(text[:char_index], 1, fg_color, bg_color)
+                image.set_colorkey(bg_color)
             else:
-                image = font.render(text[:i], aa, color)
+                image = font.render(text[:char_index], aa, fg_color)
 
             surface.blit(image, (rect.left, y))
 
         y += font_height + line_spacing
 
         # remove the text we just blitted
-        text = text[i:]
+        text = text[char_index:]
 
-    return text
-
-
-def render_outline_text(text, color, border, fontFilename, size,
-                        colorkey=(128, 128, 0)):
-    font = pygame.font.Font(fontFilename, size + 4)
-    image = pygame.Surface(font.size(text), pygame.SRCALPHA)
-    inner = pygame.font.Font(fontFilename, size - 4)
-    outline = inner.render(text, 2, border)
-    w, h = image.get_size()
-    ww, hh = outline.get_size()
-    cx = w / 2 - ww / 2
-    cy = h / 2 - hh / 2
-    for x in xrange(-3, 3):
-        for y in xrange(-3, 3):
-            image.blit(outline, (x + cx, y + cy))
-    image.blit(inner.render(text, 1, color), (cx, cy))
-    return image
-
+    return total_width, text
