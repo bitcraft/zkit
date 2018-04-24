@@ -24,7 +24,7 @@ class FRect:
 
     @property
     def x(self):
-        return self._x 
+        return int(self._x) 
 
     @x.setter
     def set_x(self, value):
@@ -32,7 +32,7 @@ class FRect:
     
     @property
     def y(self):
-        return self._y 
+        return int(self._y) 
 
     @x.setter
     def set_y(self, value):
@@ -40,7 +40,7 @@ class FRect:
 
     @property
     def topleft(self):
-        return (self._fx, self._fy)
+        return (int(self._fx), int(self._fy))
 
     @topleft.setter
     def set_topleft(self, topleft):
