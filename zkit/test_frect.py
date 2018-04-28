@@ -420,40 +420,40 @@ class FRectTests(TestCase):
         self.assertEqual((11.2, 26.8), self.r.fbottomleft)
 
     def test_get_ftopright(self):
-        self.assertEqual((24, 12), self.r.ftopright)
+        self.assertEqual((24.6, 12.3), self.r.ftopright)
 
     def test_get_fbottomright(self):
-        self.assertEqual((24, 26), self.r.fbottomright)
+        self.assertEqual((24.6, 26.8), self.r.fbottomright)
 
     def test_get_fcenterx(self):
-        self.assertEqual(17, self.r.fcenterx)
+        self.assertEqual(17.9, self.r.fcenterx)
 
     def test_get_fcentery(self):
-        self.assertEqual(19, self.r.fcentery)
+        self.assertEqual(19.55, self.r.fcentery)
 
     def test_get_fcenter(self):
-        self.assertEqual((17, 19), self.r.fcenter)
+        self.assertEqual((17.9, 19.55), self.r.fcenter)
 
     def test_get_fmidtop(self):
-        self.assertEqual((17, 12), self.r.fmidtop)
+        self.assertEqual((17.9, 12.3), self.r.fmidtop)
 
     def test_get_fmidleft(self):
-        self.assertEqual((11, 19), self.r.fmidleft)
+        self.assertEqual((11.2, 19.55), self.r.fmidleft)
 
     def test_get_fmidbottom(self):
-        self.assertEqual((17, 26), self.r.fmidbottom)
+        self.assertEqual((17.9, 26.8), self.r.fmidbottom)
 
     def test_get_fmidright(self):
-        self.assertEqual((24, 19), self.r.fmidright)
+        self.assertEqual((24.6, 19.55), self.r.fmidright)
 
     def test_get_fsize(self):
-        self.assertEqual((13, 14), self.r.fsize)
+        self.assertEqual((13.4, 14.5), self.r.fsize)
 
     def test_get_fwidth(self):
-        self.assertEqual(13, self.r.fw)
+        self.assertEqual(13.4, self.r.fw)
 
     def test_get_fheight(self):
-        self.assertEqual(14, self.r.fheight)
+        self.assertEqual(14.5, self.r.fheight)
 
     def test_set_fx(self):
         self.r.fx = 12
@@ -503,13 +503,13 @@ class FRectTests(TestCase):
         self.r = Rect(0, 0, 1, 1)
         center = self.r.fcenter
         new_center = self.r.fscale(2, 2).fcenter
-        self.assertEqual((0, 0), center, new_center)
+        self.assertEqual((0.5, 0.5), center, new_center)
 
     def test_center_after_finflate(self):
         self.r = Rect(0.0, 0.0, 1.0, 1.0)
         center = self.r.fcenter
         new_center = self.r.finflate(2, 2).fcenter
-        self.assertEqual((0, 0), center, new_center)
+        self.assertEqual((0.5, 0.5), center, new_center)
 
     def test_set_fmidtop(self):
         self.r.fmidtop = (18.0, 19.0)
@@ -540,13 +540,13 @@ class FRectTests(TestCase):
         self.assertEqual(15, self.r.fh)
 
     def test_fcopy(self):
-        r2 = self.r.copy()
+        r2 = self.r.fcopy()
         self.assertEqual(r2.ftopleft, self.r.ftopleft)
         self.assertEqual(r2.fsize, self.r.fsize)
 
     def test_fmove(self):
         x, y = self.r.ftopleft
-        self.assertEqual((x + 10, y - 10), self.r.fmove(10, -10).ftopleft)
+        self.assertEqual((x + 9.8, y - 10), self.r.fmove(10, -10).ftopleft)
 
     def test_fmove_ip(self):
         x, y = self.r.ftopleft
@@ -595,13 +595,13 @@ class FRectTests(TestCase):
 
     def test_finflate(self):
         r = self.r.finflate(5, 5)
-        self.assertEqual(r.fcenter, self.r.fcenter)
-        self.assertEqual(r.fsize, (self.r.fwidth + 5, self.r.fheight + 5))
+        self.assertEqual(r.fcenter, (17.5, 19.3))
+        self.assertEqual(r.fsize, (self.r.fwidth + 4.6, self.r.fheight + 4.5))
 
     def test_fscale(self):
         r = self.r.fscale(2, 3)
-        self.assertEqual(r.fcenter, self.r.fcenter)
-        self.assertEqual(r.fsize, (self.r.fwidth * 2, self.r.fheight * 3))
+        self.assertEqual(r.fcenter, (17.5, 19.3))
+        self.assertEqual(r.fsize, (26, 42))
 
     def test_fclip(self):
         # bigger
@@ -635,7 +635,7 @@ class FRectTests(TestCase):
         r1 = Rect(0, 0, 50, 50)
         r2 = Rect(0, 0, 75, 20)
         r3 = r1.ffit(r2)
-        self.assertEqual(r3.ftopleft, (27, 0))
+        self.assertEqual(r3.ftopleft, (27.5, 0))
         self.assertEqual(r3.fsize, (20, 20))
 
     def test_fnormalize(self):

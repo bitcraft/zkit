@@ -69,11 +69,11 @@ class FRect:
 
     @left.setter
     def left(self, value):
-        self._left = int(value)
+        self._left = float(int(value))
 
     @property
     def fleft(self):
-        return int(self._left)
+        return self._left
 
     @fleft.setter
     def fleft(self, value):
@@ -81,15 +81,15 @@ class FRect:
 
     @property
     def top(self):
-        return int(self._top)
+        return self._top
 
     @top.setter
     def top(self, value):
-        self._top = int(value)
+        self._top = float(int(value))
 
     @property
     def ftop(self):
-        return int(self._top)
+        return self._top
 
     @ftop.setter
     def ftop(self, value):
@@ -104,11 +104,27 @@ class FRect:
         self._width = value
 
     @property
+    def fwidth(self):
+        return self._width
+
+    @fwidth.setter
+    def fwidth(self, value):
+        self._width = float(value)
+
+    @property
     def height(self):
         return int(self._height)
 
     @height.setter
     def height(self, value):
+        self._height = float(int(value))
+
+    @property
+    def fheight(self):
+        return self._height
+
+    @fheight.setter
+    def fheight(self, value):
         self._height = float(value)
 
     @property
@@ -116,11 +132,11 @@ class FRect:
         """
         Returns the left edge of the rect
         """
-        return self.left
+        return int(self._left)
 
     @x.setter
     def x(self, value):
-        self.left = value
+        self.left = float(int(value))
 
     @property
     def fx(self):
@@ -138,11 +154,11 @@ class FRect:
         """
         Returns the top edge of the rect
         """
-        return self.top
+        return int(self._top)
 
     @y.setter
     def y(self, value):
-        self.top = value
+        self._top = float(int(value))
 
     @property
     def fy(self):
@@ -554,6 +570,9 @@ class FRect:
     def copy(self):
         return FRect(self)
 
+    def fcopy(self):
+        return FRect(self._left, self._top, self._width, self._height)
+
     def move(self, offset_or_x, y=None):
         if y is None:
             offset_or_x, y = offset_or_x
@@ -567,6 +586,11 @@ class FRect:
     def move_ip(self, x, y):
         self.left += x
         self.top += y
+        return self
+
+    def fmove_ip(self, x, y):
+        self._left += float(x)
+        self._top += float(y)
         return self
 
     def inflate(self, x, y):
@@ -648,13 +672,30 @@ class FRect:
         begin with, a FRect with 0 size is returned.
         """
         r = FRect(max(other_rect.left, self.left),
-                 max(other_rect.top, self.top),
-                 self.width, self.height)
+                  max(other_rect.top, self.top),
+                  self.width, self.height)
 
         if r.right > other_rect.right:
             r.width -= r.right - other_rect.right
         if r.bottom > other_rect.bottom:
             r.height -= r.bottom - other_rect.bottom
+
+        return r
+
+    def fclip(self, other_rect):
+        """
+        Returns a new rectangle that is cropped to be completely inside
+        the argument FRect. If the two rectangles do not overlap to
+        begin with, a FRect with 0 size is returned.
+        """
+        r = FRect(max(other_rect._left, self._left),
+                  max(other_rect._top, self._top),
+                  self._width, self._height)
+
+        if r.fright > other_rect.fright:
+            r._width -= r.fright - other_rect.fright
+        if r.fbottom > other_rect.fbottom:
+            r._height -= r.fbottom - other_rect.fbottom
 
         return r
 
@@ -665,6 +706,9 @@ class FRect:
         covered by the originals.
         """
         return FRect(self).union_ip(other_rect)
+
+    def funion(self, other_rect):
+        return FRect(self).funion_ip(other_rect)
 
     def union_ip(self, other_rect):
         """
@@ -678,12 +722,26 @@ class FRect:
         self.height = bottom - self.top
         return self
 
+    def funion_ip(self, other_rect):
+        self._left = min(other_rect._left, self._left)
+        self._top = min(other_rect._top, self._top)
+        right = max(self.fright, other_rect.fright)
+        bottom = max(self.fbottom, other_rect.fbottom)
+        self._width = right - self._left
+        self._height = bottom - self._top
+        return self
+
     def unionall(self, other_rects):
         """
         Returns the union of one rectangle with a sequence of many rectangles.
         """
         result = FRect(self)
         result.unionall_ip(other_rects)
+        return result
+
+    def funionall(self, other_rects):
+        result = FRect(self)
+        result.funionall_ip(other_rects)
         return result
 
     def unionall_ip(self, other_rects):
@@ -693,6 +751,11 @@ class FRect:
         """
         for rect in other_rects:
             self.union_ip(rect)
+        return self
+
+    def funionall_ip(self, other_rects):
+        for rect in other_rects:
+            self.funion_ip(rect)
         return self
 
     def fit(self, other_rect):
@@ -711,6 +774,16 @@ class FRect:
         top = other_rect.top + (other_rect.height - height) / 2
         return FRect(left, top, width, height)
 
+    def ffit(self, other_rect):
+        x_ratio = float(self.width) / float(other_rect.width)
+        y_ratio = float(self.height) / float(other_rect.height)
+        max_ratio = max(x_ratio, y_ratio)
+        width = self._width / max_ratio
+        height = self._height / max_ratio
+        left = other_rect._left + (other_rect._width - width) / 2
+        top = other_rect._top + (other_rect._height - height) / 2
+        return FRect(left, top, width, height)
+
     def normalize(self):
         """
         This will flip the width or height of a rectangle if it has a
@@ -725,14 +798,29 @@ class FRect:
             self.top += self.height
             self.height = abs(self.height)
 
+    def fnormalize(self):
+        if self._width < 0:
+            self._left += self._width
+            self._width = abs(self._width)
+
+        if self._height < 0:
+            self._top += self._height
+            self._height = abs(self._height)
+
     def contains(self, other_rect):
         """
         Returns true when the argument is completely inside the FRect.
         """
         return self.top <= other_rect.top \
-               and self.left <= other_rect.left \
-               and self.right >= other_rect.right \
-               and self.bottom >= other_rect.bottom
+            and self.left <= other_rect.left \
+            and self.right >= other_rect.right \
+            and self.bottom >= other_rect.bottom
+
+    def fcontains(self, other_rect):
+        return self._top <= other_rect._top \
+            and self._left <= other_rect._left \
+            and self.fright >= other_rect.fright \
+            and self.fbottom >= other_rect.fbottom
 
     def collidepoint(self, *args):
         """
@@ -746,9 +834,25 @@ class FRect:
             # x, y, ...
             x, y = args[0:2]
         return x >= self.left \
-               and y >= self.top \
-               and x <= self.right \
-               and y <= self.bottom
+            and y >= self.top \
+            and x <= self.right \
+            and y <= self.bottom
+
+    def fcollidepoint(self, *args):
+        """
+        Returns true if the given point is inside the rectangle. A point along
+        the right or bottom edge is not considered to be inside the rectangle.
+        """
+        if len(args) == 1:
+            # (x, y)
+            x, y = args[0]
+        else:
+            # x, y, ...
+            x, y = args[0:2]
+        return x >= self._left \
+            and y >= self._top \
+            and x <= self.fright \
+            and y <= self.fbottom
 
     def colliderect(self, other_rect):
         """
@@ -756,9 +860,15 @@ class FRect:
         top+bottom or left+right edges).
         """
         return self.left < other_rect.right \
-               and self.top < other_rect.bottom \
-               and self.right > other_rect.left \
-               and self.bottom > other_rect.top
+            and self.top < other_rect.bottom \
+            and self.right > other_rect.left \
+            and self.bottom > other_rect.top
+
+    def fcolliderect(self, other_rect):
+        return self._left < other_rect.fright \
+            and self._top < other_rect.fbottom \
+            and self.fright > other_rect._left \
+            and self.fbottom > other_rect._top
 
     def collidelist(self, other_rects):
         """
@@ -772,6 +882,12 @@ class FRect:
                 return i
         return -1
 
+    def fcollidelist(self, other_rects):
+        for i, rect in enumerate(other_rects):
+            if self.fcolliderect(rect):
+                return i
+        return -1
+
     def collidelistall(self, other_rects):
         """
         Returns a list of all the indices that contain rectangles that
@@ -781,6 +897,13 @@ class FRect:
         indices = []
         for i, rect in enumerate(other_rects):
             if self.colliderect(rect):
+                indices.append(i)
+        return indices
+
+    def fcollidelistall(self, other_rects):
+        indices = []
+        for i, rect in enumerate(other_rects):
+            if self.fcolliderect(rect):
                 indices.append(i)
         return indices
 
@@ -797,6 +920,12 @@ class FRect:
                 if self.colliderect(value):
                     return key, value
 
+    def fcollidedict(self, other_rects):
+        for key, value in other_rects.items():
+            if id(self) != id(value):
+                if self.fcolliderect(value):
+                    return key, value
+
     def collidedictall(self, other_rects):
         """
         Returns a list of all the key and value pairs that intersect with
@@ -809,5 +938,12 @@ class FRect:
         pairs = list()
         for key, value in other_rects.items():
             if self.colliderect(value):
+                pairs.append((key, value))
+        return pairs
+
+    def fcollidedictall(self, other_rects):
+        pairs = list()
+        for key, value in other_rects.items():
+            if self.fcolliderect(value):
                 pairs.append((key, value))
         return pairs
