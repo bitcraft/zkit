@@ -4,11 +4,8 @@ Test both floating point and integer properties on the FRect class
 
 from unittest import TestCase
 from collections import namedtuple
-from logging import getLogger
 
 from zkit.frect import FRect as Rect
-
-logger = getLogger()
 
 
 class RectTests(TestCase):
@@ -229,8 +226,6 @@ class RectTests(TestCase):
         r1 = Rect(0, 0, 25, 25)
         r2 = Rect(0, 100, 100, 100)
         r3 = r1.clamp(r2)
-        logger.debug(r1)
-        logger.debug(r3)
         self.assertEqual(r3.topleft, (0, r2.top))
 
     def test_clamp_from_below(self):
@@ -238,16 +233,12 @@ class RectTests(TestCase):
         r1 = Rect(0, 200, 25, 25)
         r2 = Rect(0, 100, 100, 100)
         r3 = r1.clamp(r2)
-        logger.debug(r1)
-        logger.debug(r3)
         self.assertEqual(r3.bottomleft, (0, r2.bottom))
 
         # greater
         r1 = Rect(0, 201, 25, 25)
         r2 = Rect(0, 100, 100, 100)
         r3 = r1.clamp(r2)
-        logger.debug(r1)
-        logger.debug(r3)
         self.assertEqual(r3.bottomleft, (0, r2.bottom))
 
     # "clamp from the left, clamp from the right you're the only rect
@@ -257,16 +248,12 @@ class RectTests(TestCase):
         r1 = Rect(0, 0, 25, 25)
         r2 = Rect(100, 0, 100, 100)
         r3 = r1.clamp(r2)
-        logger.debug(r1)
-        logger.debug(r3)
         self.assertEqual(r3.topleft, (r2.left, 0))
 
     def test_clamp_from_the_right(self):
         r1 = Rect(101, 0, 25, 25)
         r2 = Rect(0, 0, 100, 100)
         r3 = r1.clamp(r2)
-        logger.debug(r1)
-        logger.debug(r3)
         self.assertEqual(r3.topright, (r2.right, 0))
 
     def test_inflate(self):
@@ -311,7 +298,6 @@ class RectTests(TestCase):
         r1 = Rect(0, 0, 50, 50)
         r2 = Rect(0, 0, 75, 20)
         r3 = r1.fit(r2)
-        logger.info(r3)
         self.assertEqual(r3.topleft, (27, 0))
         self.assertEqual(r3.size, (20, 20))
 
@@ -408,3 +394,333 @@ class RectTests(TestCase):
         r3 = Rect(0, 0, 0, 0)
         self.assertEqual(r1, r3)
         self.assertNotEqual(r1, r2)
+
+
+class FRectTests(TestCase):
+
+    def setUp(self):
+        self.r = Rect(11.2, 12.3, 13.4, 14.5)
+
+    def test_get_fx(self):
+        self.assertEqual(self.r.fx, 11.2)
+
+    def test_get_fy(self):
+        self.assertEqual(self.r.fy, 12.3)
+
+    def test_get_fright(self):
+        self.assertEqual(self.r.fright, 24.6)
+
+    def test_get_fbottom(self):
+        self.assertEqual(self.r.fbottom, 26.8)
+
+    def test_get_ftopleft(self):
+        self.assertEqual((11.2, 12.3), self.r.ftopleft)
+
+    def test_get_fbottomleft(self):
+        self.assertEqual((11.2, 26.8), self.r.fbottomleft)
+
+    def test_get_ftopright(self):
+        self.assertEqual((24, 12), self.r.ftopright)
+
+    def test_get_fbottomright(self):
+        self.assertEqual((24, 26), self.r.fbottomright)
+
+    def test_get_fcenterx(self):
+        self.assertEqual(17, self.r.fcenterx)
+
+    def test_get_fcentery(self):
+        self.assertEqual(19, self.r.fcentery)
+
+    def test_get_fcenter(self):
+        self.assertEqual((17, 19), self.r.fcenter)
+
+    def test_get_fmidtop(self):
+        self.assertEqual((17, 12), self.r.fmidtop)
+
+    def test_get_fmidleft(self):
+        self.assertEqual((11, 19), self.r.fmidleft)
+
+    def test_get_fmidbottom(self):
+        self.assertEqual((17, 26), self.r.fmidbottom)
+
+    def test_get_fmidright(self):
+        self.assertEqual((24, 19), self.r.fmidright)
+
+    def test_get_fsize(self):
+        self.assertEqual((13, 14), self.r.fsize)
+
+    def test_get_fwidth(self):
+        self.assertEqual(13, self.r.fw)
+
+    def test_get_fheight(self):
+        self.assertEqual(14, self.r.fheight)
+
+    def test_set_fx(self):
+        self.r.fx = 12
+        self.assertEqual(self.r.fx, 12)
+
+    def test_set_fy(self):
+        self.r.fy = 13
+        self.assertEqual(self.r.fy, 13)
+
+    def test_set_fright(self):
+        self.r.fright = 28
+        self.assertEqual(self.r.fright, 28)
+
+    def test_set_fbottom(self):
+        self.r.fbottom = 27
+        self.assertEqual(self.r.fbottom, 27)
+
+    def test_set_ftopleft(self):
+        self.r.ftopleft = (13, 14)
+        self.assertEqual((13, 14), self.r.ftopleft)
+
+    def test_set_fbottomleft(self):
+        self.r.fbottomleft = (12, 27)
+        self.assertEqual((12, 27), self.r.fbottomleft)
+
+    def test_set_ftopright(self):
+        self.r.ftopright = (25, 13)
+        self.assertEqual((25, 13), self.r.ftopright)
+
+    def test_set_fbottomright(self):
+        self.r.fbottomright = 25, 27
+        self.assertEqual((25, 27), self.r.fbottomright)
+
+    def test_set_fcenterx(self):
+        self.r.fcenterx = 18
+        self.assertEqual(18, self.r.fcenterx)
+
+    def test_set_fcentery(self):
+        self.r.fcentery = 20
+        self.assertEqual(20, self.r.fcentery)
+
+    def test_set_fcenter(self):
+        self.r.fcenter = (18, 20)
+        self.assertEqual((18, 20), self.r.fcenter)
+
+    def test_fcenter_after_fscale(self):
+        self.r = Rect(0, 0, 1, 1)
+        center = self.r.fcenter
+        new_center = self.r.fscale(2, 2).fcenter
+        self.assertEqual((0, 0), center, new_center)
+
+    def test_center_after_finflate(self):
+        self.r = Rect(0.0, 0.0, 1.0, 1.0)
+        center = self.r.fcenter
+        new_center = self.r.finflate(2, 2).fcenter
+        self.assertEqual((0, 0), center, new_center)
+
+    def test_set_fmidtop(self):
+        self.r.fmidtop = (18.0, 19.0)
+        self.assertEqual((18, 19), self.r.fmidtop)
+
+    def test_set_fmidleft(self):
+        self.r.fmidleft = (12.0, 20.0)
+        self.assertEqual((12, 20), self.r.fmidleft)
+
+    def test_set_fmidbottom(self):
+        self.r.fmidbottom = (18.0, 27.0)
+        self.assertEqual((18, 27), self.r.fmidbottom)
+
+    def test_set_fmidright(self):
+        self.r.fmidright = (25.0, 20.0)
+        self.assertEqual((25, 20), self.r.fmidright)
+
+    def test_set_fsize(self):
+        self.r.fsize = (14.0, 15.0)
+        self.assertEqual((14, 15), self.r.fsize)
+
+    def test_set_fw(self):
+        self.r.fw = 14
+        self.assertEqual(14, self.r.fw)
+
+    def test_set_fh(self):
+        self.r.fh = 15
+        self.assertEqual(15, self.r.fh)
+
+    def test_fcopy(self):
+        r2 = self.r.copy()
+        self.assertEqual(r2.ftopleft, self.r.ftopleft)
+        self.assertEqual(r2.fsize, self.r.fsize)
+
+    def test_fmove(self):
+        x, y = self.r.ftopleft
+        self.assertEqual((x + 10, y - 10), self.r.fmove(10, -10).ftopleft)
+
+    def test_fmove_ip(self):
+        x, y = self.r.ftopleft
+        self.r.fmove_ip(10.0, -10.0)
+        self.assertEqual((x + 10.0, y - 10.0), self.r.ftopleft)
+
+    def test_fclamp_too_big(self):
+        r1 = Rect(50.0, 50.0, 50.0, 50.0)
+        r2 = Rect(0.0, 0.0, 100.0, 100.0)
+        center = r2.fclamp(r1).fcenter
+        self.assertEqual(r1.fcenter, center)
+
+    def test_fclamp_from_above(self):
+        r1 = Rect(0.0, 0.0, 25.0, 25.0)
+        r2 = Rect(0.0, 100.0, 100.0, 100.0)
+        r3 = r1.fclamp(r2)
+        self.assertEqual(r3.ftopleft, (0, r2.ftop))
+
+    def test_fclamp_from_below(self):
+        # equal
+        r1 = Rect(0.0, 200.0, 25.0, 25.0)
+        r2 = Rect(0.0, 100.0, 100.0, 100.0)
+        r3 = r1.fclamp(r2)
+        self.assertEqual(r3.fbottomleft, (0, r2.fbottom))
+
+        # greater
+        r1 = Rect(0.0, 201.0, 25.0, 25.0)
+        r2 = Rect(0.0, 100.0, 100.0, 100.0)
+        r3 = r1.fclamp(r2)
+        self.assertEqual(r3.fbottomleft, (0.0, r2.fbottom))
+
+    # "clamp from the left, clamp from the right you're the only rect
+    # in sight!" -- Jimmy Buffet
+
+    def test_fclamp_from_the_left(self):
+        r1 = Rect(0.0, 0.0, 25.0, 25.0)
+        r2 = Rect(100.0, 0.0, 100.0, 100.0)
+        r3 = r1.fclamp(r2)
+        self.assertEqual(r3.ftopleft, (r2.fleft, 0.0))
+
+    def test_fclamp_from_the_right(self):
+        r1 = Rect(101.0, 0.0, 25.0, 25.0)
+        r2 = Rect(0.0, 0.0, 100.0, 100.0)
+        r3 = r1.fclamp(r2)
+        self.assertEqual(r3.ftopright, (r2.fright, 0.0))
+
+    def test_finflate(self):
+        r = self.r.finflate(5, 5)
+        self.assertEqual(r.fcenter, self.r.fcenter)
+        self.assertEqual(r.fsize, (self.r.fwidth + 5, self.r.fheight + 5))
+
+    def test_fscale(self):
+        r = self.r.fscale(2, 3)
+        self.assertEqual(r.fcenter, self.r.fcenter)
+        self.assertEqual(r.fsize, (self.r.fwidth * 2, self.r.fheight * 3))
+
+    def test_fclip(self):
+        # bigger
+        r1 = Rect(0, 0, 125, 125)
+        r2 = Rect(25, 25, 100, 100)
+        self.assertEqual(r1.fclip(r2).ftopleft, r2.ftopleft)
+        self.assertEqual(r1.fclip(r2).fbottomright, r2.fbottomright)
+
+        # smaller
+        r1 = Rect(0, 0, 75, 75)
+        r2 = Rect(25, 25, 100, 100)
+        self.assertEqual(r1.fclip(r2).ftopleft, r2.ftopleft)
+        self.assertEqual(r1.fclip(r2).fbottomright, r2.fsize)
+
+    def test_funion(self):
+        r1 = Rect(0, 0, 50, 50)
+        r2 = Rect(25, 25, 50, 50)
+        r3 = r1.funion(r2)
+        self.assertEqual(r3.ftopleft, (0, 0))
+        self.assertEqual(r3.fbottomright, (75, 75))
+
+    def test_funionall(self):
+        r1 = Rect(0, 0, 50, 50)
+        r2 = Rect(25, 25, 50, 50)
+        r3 = Rect(50, 50, 50, 50)
+        r4 = r1.funionall([r1, r2, r3])
+        self.assertEqual(r4.ftopleft, (0, 0))
+        self.assertEqual(r4.fbottomright, (100, 100))
+
+    def test_ffit_wider(self):
+        r1 = Rect(0, 0, 50, 50)
+        r2 = Rect(0, 0, 75, 20)
+        r3 = r1.ffit(r2)
+        self.assertEqual(r3.ftopleft, (27, 0))
+        self.assertEqual(r3.fsize, (20, 20))
+
+    def test_fnormalize(self):
+        r1 = Rect(0, 0, -10, -10)
+        r1.fnormalize()
+        self.assertEqual(r1.ftopleft, (-10, -10))
+        self.assertEqual(r1.fsize, (10, 10))
+
+        r2 = Rect(0, 0, 10, 10)
+        r2.fnormalize()
+        self.assertEqual(r2.ftopleft, (0, 0))
+        self.assertEqual(r2.fsize, (10, 10))
+
+    def test_fcontains(self):
+        r1 = Rect(0, 0, 10, 10)
+        r2 = Rect(5, 5, 3, 3)
+        self.assertTrue(r1.fcontains(r2))
+        self.assertFalse(r2.fcontains(r1))
+
+    def test_fcollidepoint(self):
+        r1 = Rect(0, 0, 15, 15)
+        self.assertTrue(r1.fcollidepoint((10, 10)))
+        self.assertFalse(r1.fcollidepoint((16, 10)))
+        self.assertTrue(r1.fcollidepoint(10, 10))
+        self.assertFalse(r1.fcollidepoint(16, 10))
+        self.assertTrue(r1.fcollidepoint(10, 11, 12))
+
+    def test_fcolliderect(self):
+        r1 = Rect(0, 0, 10, 10)
+        r2 = Rect(5, 5, 10, 10)
+        r3 = Rect(20, 20, 10, 10)
+        self.assertTrue(r1.fcolliderect(r2))
+        self.assertTrue(r2.fcolliderect(r1))
+        self.assertFalse(r1.fcolliderect(r3))
+        self.assertFalse(r3.fcolliderect(r2))
+
+    def test_fcollidelist(self):
+        r1 = Rect(0, 0, 10, 10)
+        r2 = Rect(5, 5, 10, 10)
+        r3 = Rect(20, 20, 10, 10)
+        r4 = Rect(25, 25, 10, 10)
+        r5 = Rect(100, 100, 100, 100)
+        rects = [r4, r3, r2]
+        self.assertEqual(2, r1.fcollidelist(rects))
+        self.assertEqual(-1, r5.fcollidelist(rects))
+
+    def test_fcollidelistall(self):
+        r1 = Rect(0, 0, 10, 10)
+        r2 = Rect(5, 5, 10, 10)
+        r3 = Rect(8, 8, 10, 10)
+        r4 = Rect(25, 25, 10, 10)
+        r5 = Rect(9, 9, 100, 100)
+        rects = [r4, r3, r2, r5]
+        self.assertEqual(r1.fcollidelistall(rects), [1, 2, 3])
+
+    def test_fcollidedict(self):
+        r1 = Rect(0, 0, 10, 10)
+        r2 = Rect(5, 5, 10, 10)
+        r3 = Rect(8, 8, 10, 10)
+        r4 = Rect(25, 25, 10, 10)
+        r5 = Rect(100, 100, 100, 100)
+        rects = {"first": r1,
+                 "second": r2,
+                 "third": r3,
+                 "fourth": r4}
+        key, rect = r1.collidedict(rects)
+        self.assertIn(key, rects)
+        self.assertIn(rect, rects.values())
+        self.assertNotEqual(id(rect), id(r1))
+        self.assertEqual(r5.fcollidedict(rects), None)
+        self.assertEqual(r1.fcollidedict(dict()), None)
+
+    def test_fcollidedictall(self):
+        r1 = Rect(0, 0, 10, 10)
+        r2 = Rect(5, 5, 10, 10)
+        r3 = Rect(8, 8, 10, 10)
+        r4 = Rect(25, 25, 10, 10)
+        rects = {"first": r1,
+                 "second": r2,
+                 "third": r3,
+                 "fourth": r4}
+
+        expected = [("first", r1), ("second", r2), ("third", r3)]
+
+        result = r1.fcollidedictall(rects)
+        for pair in expected:
+            self.assertIn(pair, result)
+        self.assertNotIn(("fourth", r4), result)

@@ -1,65 +1,4 @@
-"""
-   Pygame uses FRect objects to store and manipulate rectangular areas. A FRect
-   can be created from a combination of left, top, width, and height values.
-   FRects can also be created from python objects that are already a FRect or
-   have an attribute named "rect".
 
-   Any Pygame function that requires a FRect argument also accepts any of these
-   values to construct a FRect. This makes it easier to create FRects on the fly
-   as arguments to functions.
-
-   The FRect functions that change the position or size of a FRect return a new
-   copy of the FRect with the affected changes. The original FRect is not
-   modified. Some methods have an alternate "in-place" version that returns
-   None but effects the original FRect. These "in-place" methods are denoted
-   with the "ip" suffix.
-
-   The FRect object has several virtual attributes which can be used to move and
-   align the FRect:
-
-   ::
-
-       x,y
-       top, left, bottom, right
-       topleft, bottomleft, topright, bottomright
-       midtop, midleft, midbottom, midright
-       center, centerx, centery
-       size, width, height
-       w,h
-
-   All of these attributes can be assigned to:
-
-   ::
-
-       rect1.right = 10
-       rect2.center = (20,30)
-
-   Assigning to size, width or height changes the dimensions of the rectangle;
-   all other assignments move the rectangle without resizing it. Notice that
-   some attributes are integers and others are pairs of integers.
-
-   If a FRect has a nonzero width or height, it will return True for a nonzero
-   test. Some methods return a FRect with 0 size to represent an invalid
-   rectangle.
-
-   The coordinates for FRect objects are all integers. The size values can be
-   programmed to have negative values, but these are considered illegal FRects
-   for most operations.
-
-   There are several collision tests between other rectangles. Most python
-   containers can be searched for collisions against a single FRect.
-
-   The area covered by a FRect does not include the right- and bottom-most edge
-   of pixels. If one FRect's bottom border is another FRect's top border (i.e.,
-   rect1.bottom=rect2.top), the two meet exactly on the screen but do not
-   overlap, and ``rect1.colliderect(rect2)`` returns false.
-
-   Though FRect can be subclassed, methods that return new rectangles are not
-   subclass aware. That is, move or copy return a new :mod:`pygame.FRect`
-   instance, not an instance of the subclass. This may change. To make subclass
-   awareness work though, subclasses may have to maintain the same constructor
-   signature as FRect.
-"""
 
 class FRect:
 
@@ -127,17 +66,33 @@ class FRect:
     @property
     def left(self):
         return int(self._left)
-    
+
     @left.setter
     def left(self, value):
+        self._left = int(value)
+
+    @property
+    def fleft(self):
+        return int(self._left)
+
+    @fleft.setter
+    def fleft(self, value):
         self._left = float(value)
-    
+
     @property
     def top(self):
         return int(self._top)
 
     @top.setter
     def top(self, value):
+        self._top = int(value)
+
+    @property
+    def ftop(self):
+        return int(self._top)
+
+    @ftop.setter
+    def ftop(self, value):
         self._top = float(value)
 
     @property
@@ -168,6 +123,17 @@ class FRect:
         self.left = value
 
     @property
+    def fx(self):
+        """
+        Returns the left edge of the rect
+        """
+        return self._left
+
+    @fx.setter
+    def fx(self, value):
+        self._left = float(value)
+
+    @property
     def y(self):
         """
         Returns the top edge of the rect
@@ -177,6 +143,17 @@ class FRect:
     @y.setter
     def y(self, value):
         self.top = value
+
+    @property
+    def fy(self):
+        """
+        Returns the top edge of the rect
+        """
+        return self._top
+
+    @fy.setter
+    def fy(self, value):
+        self._top = float(value)
 
     @property
     def right(self):
@@ -190,6 +167,17 @@ class FRect:
         self.left = value - self.width
 
     @property
+    def fright(self):
+        """
+        Returns the x value which is the right edge of the rect
+        """
+        return self._left + self._width
+
+    @fright.setter
+    def fright(self, value):
+        self._left = float(value) - self._width
+
+    @property
     def bottom(self):
         """
         Returns the y value of the bottom edge of the rect
@@ -199,6 +187,17 @@ class FRect:
     @bottom.setter
     def bottom(self, value):
         self.top = value - self.height
+
+    @property
+    def fbottom(self):
+        """
+        Returns the y value of the fbottom edge of the rect
+        """
+        return self._top + self._height
+
+    @fbottom.setter
+    def fbottom(self, value):
+        self.ftop = float(value) - self._height
 
     @property
     def topleft(self):
@@ -212,6 +211,17 @@ class FRect:
         self.left, self.top = value
 
     @property
+    def ftopleft(self):
+        """
+        Returns a point (x, y) which is the top, left corner of the rect.
+        """
+        return (self._left, self._top)
+
+    @ftopleft.setter
+    def ftopleft(self, value):
+        self._left, self._top = float(value[0]), float(value[1])
+
+    @property
     def bottomleft(self):
         """
         Returns a point (x, y) which is the bottom, left corner of the rect.
@@ -221,6 +231,17 @@ class FRect:
     @bottomleft.setter
     def bottomleft(self, value):
         self.left, self.bottom = value
+
+    @property
+    def fbottomleft(self):
+        """
+        Returns a point (x, y) which is the bottom, left corner of the rect.
+        """
+        return (self._left, self.fbottom)
+
+    @fbottomleft.setter
+    def fbottomleft(self, value):
+        self._left, self.fbottom = float(value[0]), float(value[1])
 
     @property
     def topright(self):
@@ -234,6 +255,17 @@ class FRect:
         self.right, self.top = value
 
     @property
+    def ftopright(self):
+        """
+        Returns a point (x, y) which is the top, right corner of the rect.
+        """
+        return (self.fright, self._top)
+
+    @ftopright.setter
+    def ftopright(self, value):
+        self.fright, self._top = float(value[0]), float(value[1])
+
+    @property
     def bottomright(self):
         """
         Returns a point (x, y) which is the bottom, right corner of the rect.
@@ -243,6 +275,17 @@ class FRect:
     @bottomright.setter
     def bottomright(self, value):
         self.right, self.bottom = value
+
+    @property
+    def fbottomright(self):
+        """
+        Returns a point (x, y) which is the bottom, right corner of the rect.
+        """
+        return (self.fright, self.fbottom)
+
+    @fbottomright.setter
+    def fbottomright(self, value):
+        self.fright, self.fbottom = float(value[0]), float(value[1])
 
     @property
     def centerx(self):
@@ -256,6 +299,17 @@ class FRect:
         self.left = value - self.width // 2
 
     @property
+    def fcenterx(self):
+        """
+        Returns the fcenter x value of the rect
+        """
+        return self._left + self._width / 2
+
+    @fcenterx.setter
+    def fcenterx(self, value):
+        self._left = float(value) - self._width / 2
+
+    @property
     def centery(self):
         """
         Returns the center y value of the rect
@@ -267,6 +321,17 @@ class FRect:
         self.top = value - self.height // 2
 
     @property
+    def fcentery(self):
+        """
+        Returns the fcenter y value of the rect
+        """
+        return self._top + self._height / 2
+
+    @fcentery.setter
+    def fcentery(self, value):
+        self._top = float(value) - self._height / 2
+
+    @property
     def center(self):
         """
         Returns a point (x, y) which is the center of the rect.
@@ -276,6 +341,17 @@ class FRect:
     @center.setter
     def center(self, value):
         self.centerx, self.centery = value
+
+    @property
+    def fcenter(self):
+        """
+        Returns a point (x, y) which is the fcenter of the rect.
+        """
+        return (self.fcenterx, self.fcentery)
+
+    @fcenter.setter
+    def fcenter(self, value):
+        self.fcenterx, self.fcentery = float(value[0]), float(value[1])
 
     @property
     def midtop(self):
@@ -290,6 +366,18 @@ class FRect:
         self.centerx, self.top = value
 
     @property
+    def fmidtop(self):
+        """
+        Returns a point (x, y) which is the midpoint of the top edge
+        the rect.
+        """
+        return (self.fcenterx, self._top)
+
+    @fmidtop.setter
+    def fmidtop(self, value):
+        self.fcenterx, self._top = float(value[0]), float(value[1])
+
+    @property
     def midleft(self):
         """
         Returns a point (x, y) which is the midpoint of the left edge
@@ -300,6 +388,18 @@ class FRect:
     @midleft.setter
     def midleft(self, value):
         self.left, self.centery = value
+
+    @property
+    def fmidleft(self):
+        """
+        Returns a point (x, y) which is the midpoint of the left edge
+        the rect.
+        """
+        return (self._left, self.fcentery)
+
+    @fmidleft.setter
+    def fmidleft(self, value):
+        self._left, self.fcentery = float(value[0]), float(value[1])
 
     @property
     def midbottom(self):
@@ -314,6 +414,18 @@ class FRect:
         self.centerx, self.bottom = value
 
     @property
+    def fmidbottom(self):
+        """
+        Returns a point (x, y) which is the midpoint of the bottom edge
+        the rect.
+        """
+        return (self.fcenterx, self.fbottom)
+
+    @fmidbottom.setter
+    def fmidbottom(self, value):
+        self.fcenterx, self.fbottom = float(value[0]), float(value[1])
+
+    @property
     def midright(self):
         """
         Returns a point (x, y) which is the midpoint of the right edge of
@@ -324,6 +436,18 @@ class FRect:
     @midright.setter
     def midright(self, value):
         self.right, self.centery = value
+
+    @property
+    def fmidright(self):
+        """
+        Returns a point (x, y) which is the midpoint of the right edge of
+        the rect.
+        """
+        return (self.fright, self.fcentery)
+
+    @fmidright.setter
+    def fmidright(self, value):
+        self.fright, self.fcentery = float(value[0]), float(value[1])
 
     @property
     def size(self):
@@ -337,6 +461,17 @@ class FRect:
         self.width, self.height = value
 
     @property
+    def fsize(self):
+        """
+        Returns the width and height of the rect as a tuple (width, height)
+        """
+        return (self._width, self._height)
+
+    @fsize.setter
+    def fsize(self, value):
+        self._width, self._height = float(value[0]), float(value[1])
+
+    @property
     def w(self):
         """
         The width of the rect
@@ -348,6 +483,17 @@ class FRect:
         self.width = value
 
     @property
+    def fw(self):
+        """
+        The width of the rect
+        """
+        return self._width
+
+    @fw.setter
+    def fw(self, value):
+        self._width = float(value)
+
+    @property
     def h(self):
         """
         The height of the rect
@@ -357,6 +503,17 @@ class FRect:
     @h.setter
     def h(self, value):
         self.height = value
+
+    @property
+    def fh(self):
+        """
+        The height of the rect
+        """
+        return self._height
+
+    @fh.setter
+    def fh(self, value):
+        self._height = float(value)
 
     def scale(self, x, y):
         """
@@ -376,46 +533,60 @@ class FRect:
         self.center = center
         return self
 
+    def fscale(self, x, y):
+        """
+        Returns a new rectangle with size changed by given scaling factor. The
+        rectangle remains centered around its current center. Negative values
+        will shrink the rectangle.
+        """
+        return FRect(self).fscale_ip(float(x), float(y))
+
+    def fscale_ip(self, x, y):
+        """
+        Same as ``FRect.fscale()``, but mutates the instance
+        """
+        center = self.fcenter
+        self._width *= float(x)
+        self._height *= float(y)
+        self.fcenter = center
+        return self
+
     def copy(self):
-        """
-        Returns a new rectangle having the same position and size as
-        the original.
-        """
         return FRect(self)
 
     def move(self, offset_or_x, y=None):
-        """
-        Returns a new rectangle that is moved by the given offset. The x
-        and y arguments can be any integer value, positive or negative.
-        """
         if y is None:
             offset_or_x, y = offset_or_x
         return FRect(self).move_ip(offset_or_x, y)
 
+    def fmove(self, offset_or_x, y=None):
+        if y is None:
+            offset_or_x, y = float(offset_or_x[0]), float(offset_or_x[1])
+        return FRect(self).fmove_ip(offset_or_x, y)
+
     def move_ip(self, x, y):
-        """
-        Same as ``FRect.move()``, but mutates the instance
-        """
         self.left += x
         self.top += y
         return self
 
     def inflate(self, x, y):
-        """
-        Returns a new rectangle with the size changed by the given offset. The
-        rectangle remains centered around its current center. Negative values
-        will shrink the rectangle.
-        """
         return FRect(self).inflate_ip(x, y)
 
+    def finflate(self, x, y):
+        return FRect(self).finflate_ip(float(x), float(y))
+
     def inflate_ip(self, x, y):
-        """
-        Same as ``FRect.inflate()``, but mutates the instance
-        """
         center = self.center
         self.width += x
         self.height += y
         self.center = center
+        return self
+
+    def finflate_ip(self, x, y):
+        center = self.fcenter
+        self._width += float(x)
+        self._height += float(y)
+        self.fcenter = center
         return self
 
     def clamp(self, other_rect):
@@ -426,6 +597,9 @@ class FRect:
         dimensions which do not fit.
         """
         return FRect(self).clamp_ip(other_rect)
+
+    def fclamp(self, other_rect):
+        return FRect(self).fclamp_ip(other_rect)
 
     def clamp_ip(self, other_rect):
         """
@@ -444,6 +618,26 @@ class FRect:
             self.top = other_rect.top
         elif other_rect.bottom <= self.top:
             self.bottom = other_rect.bottom
+
+        return self
+
+    def fclamp_ip(self, other_rect):
+        """
+        Same as ``FRect.fclamp()``, but mutates the instance
+        """
+        if other_rect._width <= self._width:
+            self.fcenterx = other_rect.fcenterx
+        elif other_rect._left > self._left:
+            self._left = other_rect._left
+        elif other_rect.fright < self._left:
+            self._left = other_rect.fright - self._width
+
+        if other_rect._height <= self._height:
+            self.fcentery = other_rect.fcentery
+        elif other_rect._top >= self.fbottom:
+            self._top = other_rect._top
+        elif other_rect.fbottom <= self._top:
+            self.fbottom = other_rect.fbottom
 
         return self
 
@@ -617,4 +811,3 @@ class FRect:
             if self.colliderect(value):
                 pairs.append((key, value))
         return pairs
-
