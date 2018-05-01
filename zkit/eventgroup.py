@@ -15,13 +15,14 @@ class Subscription(object):
         self.handler = handler
         self.event_key = event_key
         self.filter_kwargs = filter_kwargs
-        self.is_bound = False
         self.sprite = None
 
-    def __call__(self, event, delta):
+    def execute_handler(self, event, delta):
         self.handler(self.sprite, event, delta)
 
     def __hash__(self):
+        """Make instances of Subscription to be considered the same object if
+they share the same handler qualified name."""
         return hash(self.handler.__qualname__)
 
     def __eq__(self, other):
@@ -34,27 +35,46 @@ class EventGroup(Group):
         super(EventGroup, self).__init__(*sprites)
         self.subscriptions_set = set()
         self.subscriptions = list()
-        self._subscriptions_need_processing = True
 
     def add(self, *sprites):
         super(EventGroup, self).add(*sprites)
+        for sprite in sprites:
+            self.bind_subscriptions(sprite)
 
     def update(self, events, delta):
-        if self._subscriptions_need_processing:
-            self.bind_unbound_subscriptions()
-            self._subscriptions_need_processing = False
         for event in events:
-            for subscription in self.subscriptions:
-                if subscription.event_key == event.type:
-                    subscription(event, delta)
+            for subscription in self._get_matching_subscription(event):
+                subscription.execute_handler(event, delta)
 
-    def bind_unbound_subscriptions(self):
-        for sprite in self:
-            for key in dir(sprite):
-                value = getattr(sprite, key)
-                if callable(value) and key.startswith("on_"):
-                    subscription = value()
-                    if subscription not in self.subscriptions_set:
-                        subscription.sprite = sprite
-                        self.subscriptions_set.add(subscription)
-                        self.subscriptions.append(subscription)
+    def _get_matching_subscription(self, event):
+        # Note that the event can either be a pygame event, or any type
+        # that has an event_key property
+        for subscription in self.subscriptions:
+            if hasattr(event, "type"):
+                key = event.type
+            else:
+                key = event.event_key
+
+            event_key = subscription.event_key
+            filters = subscription.filter_kwargs
+            if event_key == key and self._filters_match(event, **filters):
+                yield subscription
+
+    def _filters_match(self, event, **filter_kwargs):
+        return all(getattr(event, k) == v for k, v in filter_kwargs.items())
+
+    def bind_subscriptions(self, sprite):
+        for key in dir(sprite):
+            value = getattr(sprite, key)
+            if self._is_event_handler_function(key, value):
+                self._bind_subscription(sprite, value)
+
+    def _is_event_handler_function(self, key, value):
+        return callable(value) and key.startswith("on_")
+
+    def _bind_subscription(self, sprite, subscription_factory):
+        subscription = subscription_factory()
+        if subscription not in self.subscriptions_set:
+            subscription.sprite = sprite
+            self.subscriptions_set.add(subscription)
+            self.subscriptions.append(subscription)
