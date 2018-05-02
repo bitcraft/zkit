@@ -27,14 +27,6 @@ class Subscription(object):
     def execute_handler(self, event, delta):
         self.handler(self.sprite, event, delta)
 
-    def __hash__(self):
-        """Make instances of Subscription to be considered the same object if
-they share the same handler qualified name."""
-        return hash(self.handler.__qualname__)
-
-    def __eq__(self, other):
-        return self.handler.__qualname__ == other.handler.__qualname__
-
 
 class EventGroup(Group):
 
@@ -45,7 +37,6 @@ class EventGroup(Group):
 
     def __init__(self, *sprites):
         super(EventGroup, self).__init__(*sprites)
-        self.subscriptions_set = set()
         self.subscriptions = list()
         self.sprite_events = list()
 
@@ -65,10 +56,8 @@ class EventGroup(Group):
 
     def _bind_subscription(self, sprite, subscription_factory):
         subscription = subscription_factory()
-        if subscription not in self.subscriptions_set:
-            subscription.sprite = sprite
-            self.subscriptions_set.add(subscription)
-            self.subscriptions.append(subscription)
+        subscription.sprite = sprite
+        self.subscriptions.append(subscription)
 
     def update(self, events, delta):
         super(EventGroup, self).update(delta)
