@@ -98,3 +98,8 @@ class EventGroupTestCase(TestCase):
         self.g.add(InfiniteEventSpriteB())
         with self.assertRaises(EventGroup.PossibleInfiniteEventLoopError):
             self.g.update([], 0)
+
+    def test_killed_sprites_stop_handling_events(self):
+        self.s.kill()
+        self.g.update([Event(pygame.KEYDOWN, key=pygame.K_ESCAPE)], 0)
+        self.assertEqual(len(self.s.called_events), 0)

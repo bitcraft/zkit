@@ -72,6 +72,7 @@ class EventGroup(Group):
 
     def update(self, events, delta):
         super(EventGroup, self).update(delta)
+        self._unsubscribe_removed_sprites()
         # first handle passed-in events (presumably pygame events)
         for event in events:
             self._handle_event(event, delta)
@@ -86,6 +87,13 @@ class EventGroup(Group):
             if events_handled > self.MAX_SPRITE_EVENTS_PER_UPDATE:
                 msg = INFINITE_UPDATE_MSG % events_handled
                 raise self.PossibleInfiniteEventLoopError(msg)
+
+    def _unsubscribe_removed_sprites(self):
+        remaining_valid_subscriptions = list()
+        for subscription in self.subscriptions:
+            if self.has(subscription.sprite):
+                remaining_valid_subscriptions.append(subscription)
+        self.subscriptions = remaining_valid_subscriptions
 
     def _get_matching_subscription(self, event):
         # Note that the event can either be a pygame event, or any type
