@@ -1,57 +1,40 @@
 from abc import ABC, abstractmethod
 
-from os.path import splitext
-
-from zkit.assman.tagstore import TagStore
-
-
-class Asset:
-
-    def __init__(self, asset_id):
-        self.asset_id = asset_id
-        self.original_filename = None
-        self.last_modified = None
-        self.properties = dict()
-        self.data = None
-        self.tag_names = set()
-
 
 class AssetManager:
 
     def __init__(self):
+        self.asset_db = None
+        self.data_store = None
         self.id_provider = None
         self.loaders = dict()
-        self.asset_store = None
-        self.tag_store = None
-        self._asset_memo = dict()  # {asset_id: asset}
-        self._tag_index = dict()  # {tag_name: asset}
 
-    def __getitem__(self, asset_id):
-        asset = self.asset_store.get_asset(asset_id)
-        _, extension = splitext(asset.original_filename)
-        loader = self.loaders[extension]
-        loader.load(asset)
+    def get_asset(self, asset_id):
+        asset = self.asset_db.get_asset(asset_id)
+        self._load_asset(asset)
         return asset
 
-    def __setitem__(self, asset):
-        asset.asset_id = self.id_provider.get_next_id()
-        if not all(name in self.tag_store for name in asset.tag_names):
-            msg = "Asset '%s' specifies tag name '%s' which does not exist"
-            args = (str(asset.asset_id).lower(), msg)
-            raise TagStore.NoSuchTagException(msg % args)
-        self.asset_store.put_asset(asset)
+    def _load_asset(self, asset):
+        asset_bytes = self.data_store.get_asset_bytes(asset)
+        if asset.ext in self.loaders:
+            asset.data = self.loaders[asset.ext].load(asset_bytes)
+        else:
+            asset.data = asset_bytes
+        return asset
 
-    def __delitem__(self, asset_id):
-        del self._asset_memo[asset_id]
+    def get_assets_with_tag_names(self, *tag_names):
+        assets = self.asset_db.get_assets_with_tags(*tag_names)
+        for asset in assets:
+            self._load_asset(asset)
+        return assets
 
-    def __iter__(self):
-        """Iterate through unloaded assets. The returned assets will only
-contain meta data, but not the actual content of the files"""
-        for asset in self._loader.list_assets():
-            yield asset
-
-    def create_tag(self, tag_name, description):
-        self.tag_store[tag_name] = description
+    def store_asset(self, asset, *tag_names):
+        if asset.asset_id is None:
+            asset.asset_id = self.id_provider.get_next_id()
+        self.asset_db.store_asset(asset)
+        for tag_name in tag_names:
+            self.asset_db.tag_asset(asset.asset_id, tag_name)
+        self.data_store.put_asset_bytes(asset.data)
 
 
 class AssetIDProvider(ABC):
@@ -65,23 +48,19 @@ class AssetIDProvider(ABC):
         pass
 
 
-class AssetStore(ABC):
-
-    @abstractmethod
-    def put_asset(self, asset):
-        pass
-
-    @abstractmethod
-    def get_asset(self, asset_id):
-        pass
-
-    @abstractmethod
-    def list_assets(self):
-        pass
-
-
-class AssetLoader:
+class MediaLoader:
 
     @abstractmethod
     def load(self, asset):
+        pass
+
+
+class DataStore(ABC):
+
+    @abstractmethod
+    def get_asset_bytes(self, asset):
+        pass
+
+    @abstractmethod
+    def put_asset_bytes(self, asset):
         pass
